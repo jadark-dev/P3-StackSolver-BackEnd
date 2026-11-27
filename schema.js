@@ -26,6 +26,7 @@ export const schema = buildSchema(`
     type Query {
         getUsuarios: [Usuario]
         getIntercambios: [Intercambio]
+        obtenerSeleccion(usuarioId: ID!): [ID!]!
     }
 
     # Operaciones para modificar los datos (CRUDs)
@@ -34,5 +35,7 @@ export const schema = buildSchema(`
         borrarUsuario(id: ID!): String
         crearIntercambio(tipo: String!, titulo: String!, email: String!, fecha: String!, descripcion: String!, usuarioId: String!): Intercambio
         borrarIntercambio(id: ID!): String
+        guardarSeleccion(usuarioId: ID!, intercambioId: ID!): Boolean!
+        quitarDeSeleccion(usuarioId: ID!, intercambioId: ID!): Boolean!
     }
 `);
