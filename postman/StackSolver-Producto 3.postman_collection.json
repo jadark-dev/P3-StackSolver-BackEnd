@@ -1,0 +1,292 @@
+{
+  "info": {
+    "_postman_id": "9605d636-1481-47db-969d-ab2b654f3091",
+    "name": "StackSolver — Producto 3",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "60456021",
+    "_collection_link": "https://go.postman.co/collection/60456021-9605d636-1481-47db-969d-ab2b654f3091?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Consulta usuarios e intercambios",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"query { getUsuarios { id nombre email } getIntercambios { id titulo tipo } }\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear usuario",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"mutation { crearUsuario(nombre: \\\"Usuario de prueba\\\", email: \\\"prueba@example.com\\\", password: \\\"Prueba123\\\") { id nombre email } }\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear intercambio",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"mutation CrearIntercambio($usuarioId: String!) { crearIntercambio(tipo: \\\"oferta\\\", titulo: \\\"Practica francés conmigo\\\", email: \\\"prueba@example.com\\\", fecha: \\\"2026-12-01\\\", descripcion: \\\"Ofrezco conversación en francés para principiantes.\\\", usuarioId: $usuarioId) { id tipo titulo email fecha descripcion usuarioId } }\",\r\n  \"variables\": {\r\n    \"usuarioId\": \"6b09309d4324b7ff7bacc6e4\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Eliminar intercambio",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"mutation BorrarIntercambio($id: ID!) { borrarIntercambio(id: $id) }\",\r\n  \"variables\": {\r\n    \"id\": \"6b09318a4324b7ff7bacc6e5\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Eliminar usuario",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"mutation BorrarUsuario($id: ID!) { borrarUsuario(id: $id) }\",\r\n  \"variables\": {\r\n    \"id\": \"6b09309d4324b7ff7bacc6e4\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guardar seleccion",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"mutation GuardarSeleccion($usuarioId: ID!, $intercambioId: ID!) { guardarSeleccion(usuarioId: $usuarioId, intercambioId: $intercambioId) }\",\r\n  \"variables\": {\r\n    \"usuarioId\": \"6b0934d38f008c5907dd13b3\",\r\n    \"intercambioId\": \"6b0934e78f008c5907dd13b4\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Consultar seleccion",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"query ObtenerSeleccion($usuarioId: ID!) { obtenerSeleccion(usuarioId: $usuarioId) }\",\r\n  \"variables\": {\r\n    \"usuarioId\": \"6b0934d38f008c5907dd13b3\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Quitar de seleccion",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"mutation QuitarSeleccion($usuarioId: ID!, $intercambioId: ID!) { quitarDeSeleccion(usuarioId: $usuarioId, intercambioId: $intercambioId) }\",\r\n  \"variables\": {\r\n    \"usuarioId\": \"6b0934d38f008c5907dd13b3\",\r\n    \"intercambioId\": \"6b0934e78f008c5907dd13b4\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Actualizar usuario",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"mutation ActualizarUsuario($id: ID!, $nombre: String!, $email: String!, $password: String!) { actualizarUsuario(id: $id, nombre: $nombre, email: $email, password: $password) { id nombre email } }\",\r\n  \"variables\": {\r\n    \"id\": \"6b0934d38f008c5907dd13b3\",\r\n    \"nombre\": \"Usuario de prueba actualizado\",\r\n    \"email\": \"prueba@example.com\",\r\n    \"password\": \"Prueba123\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Actualizar intercambio",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"query\": \"mutation ActualizarIntercambio($id: ID!, $usuarioId: String!) { actualizarIntercambio(id: $id, tipo: \\\"oferta\\\", titulo: \\\"Conversación en francés — actualizado\\\", email: \\\"prueba@example.com\\\", fecha: \\\"2026-12-05\\\", descripcion: \\\"Practicaremos conversación los sábados por la mañana.\\\", usuarioId: $usuarioId) { id tipo titulo email fecha descripcion usuarioId } }\",\r\n  \"variables\": {\r\n    \"id\": \"6b0934e78f008c5907dd13b4\",\r\n    \"usuarioId\": \"6b0934d38f008c5907dd13b3\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:4000/graphql",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "graphql"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
