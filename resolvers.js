@@ -9,6 +9,62 @@ export const resolvers = {
     //Queries (Lectura)
     //.find() busca todos los documentos y .toArray() se encarga de convertirlo en un array
     
+    guardarSeleccion: async ({ usuarioId, intercambioId }) => {
+        if (!ObjectId.isValid(usuarioId) || !ObjectId.isValid(intercambioId)) {
+            throw new Error("Los identificadores no son válidos.");
+        }
+
+        const db = getDB();
+
+        const usuario = await db.collection("usuarios").findOne({
+            _id: new ObjectId(usuarioId)
+        });
+
+        const intercambio = await db.collection("intercambios").findOne({
+            _id: new ObjectId(intercambioId)
+        });
+
+        if (!usuario || !intercambio) {
+            throw new Error("El usuario o el intercambio no existe.");
+        }
+
+        await db.collection("selecciones").updateOne(
+            { usuarioId, intercambioId },
+            { $set: { usuarioId, intercambioId } },
+            { upsert: true }
+        );
+
+        return true;
+    },
+
+    quitarDeSeleccion: async ({ usuarioId, intercambioId }) => {
+        if (!ObjectId.isValid(usuarioId) || !ObjectId.isValid(intercambioId)) {
+            throw new Error("Los identificadores no son válidos.");
+        }
+
+        const db = getDB();
+
+        const resultado = await db.collection("selecciones").deleteOne({
+            usuarioId,
+            intercambioId
+        });
+
+        return resultado.deletedCount === 1;
+    },
+
+    obtenerSeleccion: async ({ usuarioId }) => {
+        if (!ObjectId.isValid(usuarioId)) {
+            throw new Error("El identificador del usuario no es válido.");
+        }
+
+        const db = getDB();
+        const selecciones = await db.collection("selecciones").find({
+            usuarioId: usuarioId
+        }).toArray();
+
+        return selecciones.map((seleccion) => seleccion.intercambioId);
+    },
+
     getUsuarios: async () => {
         const db = getDB();
         const usuarios = await db.collection("usuarios").find().toArray();
