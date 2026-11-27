@@ -32,7 +32,9 @@ export const schema = buildSchema(`
     # Operaciones para modificar los datos (CRUDs)
     type Mutation {
         crearUsuario(nombre: String!, email: String!, password: String!): Usuario
+        actualizarUsuario(id: ID!, nombre: String!, email: String!, password: String!): Usuario
         borrarUsuario(id: ID!): String
+        actualizarIntercambio(id: ID!, tipo: String!, titulo: String!, email: String!, fecha: String!, descripcion: String!, usuarioId: String!): Intercambio
         crearIntercambio(tipo: String!, titulo: String!, email: String!, fecha: String!, descripcion: String!, usuarioId: String!): Intercambio
         borrarIntercambio(id: ID!): String
         guardarSeleccion(usuarioId: ID!, intercambioId: ID!): Boolean!
