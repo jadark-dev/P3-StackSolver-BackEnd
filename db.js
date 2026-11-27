@@ -19,6 +19,10 @@ export async function conectarDB() {
     try {
         await client.connect();
         db = client.db('StackSolversDB');
+        await db.collection("usuarios").createIndex(
+            { email: 1 },
+            { unique: true }
+        );
         console.log("Conectado a MongoDB!");
         return db;
     } catch (error) {

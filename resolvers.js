@@ -126,6 +126,55 @@ export const resolvers = {
         };
     },
 
+    actualizarUsuario: async ({ id, nombre, email, password }) => {
+        if (!ObjectId.isValid(id)) {
+            throw new Error("El identificador del usuario no es válido.");
+        }
+
+        const nombreLimpio = nombre.trim();
+        const emailLimpio = email.trim().toLowerCase();
+
+        if (!nombreLimpio || !emailLimpio || !password.trim()) {
+            throw new Error("Nombre, correo y contraseña son obligatorios.");
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
+            throw new Error("El correo electrónico no tiene un formato válido.");
+        }
+
+        const db = getDB();
+        const identificador = new ObjectId(id);
+
+        const correoOcupado = await db.collection("usuarios").findOne({
+            email: emailLimpio,
+            _id: { $ne: identificador }
+        });
+
+        if (correoOcupado) {
+            throw new Error("Ya existe otro usuario con ese correo electrónico.");
+        }
+
+        const datos = {
+            nombre: nombreLimpio,
+            email: emailLimpio,
+            password: password
+        };
+
+        const resultado = await db.collection("usuarios").updateOne(
+            { _id: identificador },
+            { $set: datos }
+        );
+
+        if (resultado.matchedCount === 0) {
+            throw new Error("No existe un usuario con ese identificador.");
+        }
+
+        return {
+            ...datos,
+            id: identificador.toHexString()
+        };
+    },
+
     borrarUsuario: async ({ id }) => {
         if (!ObjectId.isValid(id)) {
             throw new Error("El identificador del usuario no es válido.");
@@ -198,6 +247,71 @@ export const resolvers = {
         return {
             ...nuevoIntercambio,
             id: resultado.insertedId.toHexString()
+        };
+    },
+
+    actualizarIntercambio: async ({
+        id, tipo, titulo, email, fecha, descripcion, usuarioId
+    }) => {
+        if (!ObjectId.isValid(id) || !ObjectId.isValid(usuarioId)) {
+            throw new Error("El identificador del intercambio o del autor no es válido.");
+        }
+
+        const datos = {
+            tipo: tipo.trim(),
+            titulo: titulo.trim(),
+            email: email.trim().toLowerCase(),
+            fecha: fecha.trim(),
+            descripcion: descripcion.trim(),
+            usuarioId: new ObjectId(usuarioId).toHexString()
+        };
+
+        if (Object.values(datos).some((valor) => valor === "")) {
+            throw new Error("Todos los campos del intercambio son obligatorios.");
+        }
+
+        if (!["oferta", "peticion"].includes(datos.tipo)) {
+            throw new Error("El tipo debe ser 'oferta' o 'peticion'.");
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) {
+            throw new Error("El correo electrónico no tiene un formato válido.");
+        }
+
+        const fechaInterpretada = new Date(`${datos.fecha}T00:00:00.000Z`);
+
+        if (
+            !/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha) ||
+            Number.isNaN(fechaInterpretada.getTime()) ||
+            fechaInterpretada.toISOString().slice(0, 10) !== datos.fecha
+        ) {
+            throw new Error("Introduce una fecha válida con formato YYYY-MM-DD.");
+        }
+
+        const db = getDB();
+
+        const autor = await db.collection("usuarios").findOne({
+            _id: new ObjectId(datos.usuarioId)
+        });
+
+        if (!autor) {
+            throw new Error("No existe un usuario con el identificador del autor.");
+        }
+
+        const identificador = new ObjectId(id);
+
+        const resultado = await db.collection("intercambios").updateOne(
+            { _id: identificador },
+            { $set: datos }
+        );
+
+        if (resultado.matchedCount === 0) {
+            throw new Error("No existe un intercambio con ese identificador.");
+        }
+
+        return {
+            ...datos,
+            id: identificador.toHexString()
         };
     },
 
