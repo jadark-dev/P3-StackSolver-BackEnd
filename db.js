@@ -3,6 +3,7 @@
 
 import { MongoClient } from "mongodb";
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs'; // <-- NUEVA IMPORTACIÓN
 
 //cargamos las variables del archivo .env
 dotenv.config();
@@ -19,10 +20,33 @@ export async function conectarDB() {
     try {
         await client.connect();
         db = client.db('StackSolversDB');
+        
+        // 1. Índices de Usuarios (email único)
         await db.collection("usuarios").createIndex(
             { email: 1 },
             { unique: true }
         );
+
+        // 2. Índice compuesto de Selecciones (evita duplicados de usuario+intercambio)
+        await db.collection("selecciones").createIndex(
+            { usuarioId: 1, intercambioId: 1 },
+            { unique: true }
+        );
+
+        // 3. Crear usuario Administrador de prueba (si no existe)
+        const adminEmail = "admin@stacksolver.com";
+        const adminExistente = await db.collection("usuarios").findOne({ email: adminEmail });
+
+        if (!adminExistente) {
+            const passwordEncriptada = await bcrypt.hash("admin123", 10);
+            await db.collection("usuarios").insertOne({
+                nombre: "Administrador",
+                email: adminEmail,
+                password: passwordEncriptada
+            });
+            console.log(`Usuario administrador creado: ${adminEmail} / admin123`);
+        }
+
         console.log("Conectado a MongoDB!");
         return db;
     } catch (error) {

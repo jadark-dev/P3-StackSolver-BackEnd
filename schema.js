@@ -1,5 +1,5 @@
 //El archivo schema.js se encarga de definirle a la API los datos que existen y que se puede hacer
-import { buildSchema } from "graphql"; //
+import { buildSchema } from "graphql";
 
 export const schema = buildSchema(`
     
@@ -9,7 +9,6 @@ export const schema = buildSchema(`
         id: ID!
         nombre: String!
         email: String!
-        password: String!
     }
 
     type Intercambio {
@@ -21,6 +20,11 @@ export const schema = buildSchema(`
         descripcion: String!
         usuarioId: String!    
     }
+
+    type AuthPayload {
+        token: String!
+        usuario: Usuario!
+    }
     
     # Operaciones que nos permiten consultar datos
     type Query {
@@ -31,6 +35,7 @@ export const schema = buildSchema(`
 
     # Operaciones para modificar los datos (CRUDs)
     type Mutation {
+        login(email: String!, password: String!): AuthPayload!
         crearUsuario(nombre: String!, email: String!, password: String!): Usuario
         actualizarUsuario(id: ID!, nombre: String!, email: String!, password: String!): Usuario
         borrarUsuario(id: ID!): String
