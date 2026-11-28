@@ -20,11 +20,13 @@
   },
   "homepage": "https://github.com/StudyPractic55764/P3-StackSolver-BackEnd#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "express-graphql": "^0.12.0",
     "graphql": "^15.11.0",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.8.0"
   },
   "devDependencies": {

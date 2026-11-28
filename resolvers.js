@@ -1,96 +1,57 @@
-//El archivo resovlers.js dirige la lógica de la aplicación y cada función del schema.js tiene un equivalente aquí
+//El archivo resolvers.js dirige la lógica de la aplicación y cada función del schema.js tiene un equivalente aquí
 //Este se conecta directamente a las colecciones de MongoDB
 
 import { getDB } from './db.js';
 import { ObjectId } from 'mongodb';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+// Clave secreta para firmar los tokens JWT
+const JWT_SECRET = process.env.JWT_SECRET || 'mi_clave_secreta_super_segura';
 
 export const resolvers = {
     
-    //Queries (Lectura)
-    //.find() busca todos los documentos y .toArray() se encarga de convertirlo en un array
-    
-    guardarSeleccion: async ({ usuarioId, intercambioId }) => {
-        if (!ObjectId.isValid(usuarioId) || !ObjectId.isValid(intercambioId)) {
-            throw new Error("Los identificadores no son válidos.");
-        }
+    // ==========================================
+    // MUTATIONS (Escritura y Autenticación)
+    // ==========================================
 
+    login: async ({ email, password }) => {
         const db = getDB();
+        const emailLimpio = email.trim().toLowerCase();
 
-        const usuario = await db.collection("usuarios").findOne({
-            _id: new ObjectId(usuarioId)
-        });
+        const usuario = await db.collection("usuarios").findOne({ email: emailLimpio });
 
-        const intercambio = await db.collection("intercambios").findOne({
-            _id: new ObjectId(intercambioId)
-        });
-
-        if (!usuario || !intercambio) {
-            throw new Error("El usuario o el intercambio no existe.");
+        if (!usuario) {
+            throw new Error("Credenciales incorrectas. El usuario no existe.");
         }
 
-        await db.collection("selecciones").updateOne(
-            { usuarioId, intercambioId },
-            { $set: { usuarioId, intercambioId } },
-            { upsert: true }
+        const passwordValida = await bcrypt.compare(password, usuario.password);
+
+        if (!passwordValida) {
+            throw new Error("Credenciales incorrectas. La contraseña no es válida.");
+        }
+
+        const token = jwt.sign(
+            { id: usuario._id.toString(), email: usuario.email },
+            JWT_SECRET,
+            { expiresIn: '2h' }
         );
 
-        return true;
+        return {
+            token,
+            usuario: {
+                id: usuario._id.toString(),
+                nombre: usuario.nombre,
+                email: usuario.email
+            }
+        };
     },
 
-    quitarDeSeleccion: async ({ usuarioId, intercambioId }) => {
-        if (!ObjectId.isValid(usuarioId) || !ObjectId.isValid(intercambioId)) {
-            throw new Error("Los identificadores no son válidos.");
+    crearUsuario: async ({ nombre, email, password }, context) => {
+        if (!context || !context.user) {
+            throw new Error("No autorizado. Debes iniciar sesión para realizar esta acción.");
         }
 
-        const db = getDB();
-
-        const resultado = await db.collection("selecciones").deleteOne({
-            usuarioId,
-            intercambioId
-        });
-
-        return resultado.deletedCount === 1;
-    },
-
-    obtenerSeleccion: async ({ usuarioId }) => {
-        if (!ObjectId.isValid(usuarioId)) {
-            throw new Error("El identificador del usuario no es válido.");
-        }
-
-        const db = getDB();
-        const selecciones = await db.collection("selecciones").find({
-            usuarioId: usuarioId
-        }).toArray();
-
-        return selecciones.map((seleccion) => seleccion.intercambioId);
-    },
-
-    getUsuarios: async () => {
-        const db = getDB();
-        const usuarios = await db.collection("usuarios").find().toArray();
-
-        return usuarios.map(({ _id, ...datos }) => ({
-            ...datos,
-            id: _id.toHexString()
-        }));
-    },
-
-    getIntercambios: async () => {
-        const db = getDB();
-        const intercambios = await db.collection("intercambios").find().toArray();
-
-        return intercambios.map(({ _id, ...datos }) => ({
-            ...datos,
-            id: _id.toHexString()
-        }));
-    },
-
-    //Mutations (Escritura)
-
-    //Dentro las funciones de creción, .insertOne devuelve un objeto con el Id generado (insertedId)
-    //Y en los returns se devuelven los objetos completos para que GraphQL lo muestre.
-
-    crearUsuario: async ({ nombre, email, password }) => {
         const nombreLimpio = nombre.trim();
         const emailLimpio = email.trim().toLowerCase();
 
@@ -112,21 +73,28 @@ export const resolvers = {
             throw new Error("Ya existe un usuario con ese correo electrónico.");
         }
 
+        const passwordEncriptada = await bcrypt.hash(password, 10);
+
         const nuevoUsuario = {
             nombre: nombreLimpio,
             email: emailLimpio,
-            password: password
+            password: passwordEncriptada 
         };
 
         const resultado = await db.collection("usuarios").insertOne(nuevoUsuario);
 
         return {
-            ...nuevoUsuario,
-            id: resultado.insertedId.toHexString()
+            id: resultado.insertedId.toHexString(),
+            nombre: nuevoUsuario.nombre,
+            email: nuevoUsuario.email
         };
     },
 
-    actualizarUsuario: async ({ id, nombre, email, password }) => {
+    actualizarUsuario: async ({ id, nombre, email, password }, context) => {
+        if (!context || !context.user) {
+            throw new Error("No autorizado. Debes iniciar sesión para realizar esta acción.");
+        }
+
         if (!ObjectId.isValid(id)) {
             throw new Error("El identificador del usuario no es válido.");
         }
@@ -154,10 +122,12 @@ export const resolvers = {
             throw new Error("Ya existe otro usuario con ese correo electrónico.");
         }
 
+        const passwordEncriptada = await bcrypt.hash(password, 10);
+
         const datos = {
             nombre: nombreLimpio,
             email: emailLimpio,
-            password: password
+            password: passwordEncriptada
         };
 
         const resultado = await db.collection("usuarios").updateOne(
@@ -170,12 +140,17 @@ export const resolvers = {
         }
 
         return {
-            ...datos,
-            id: identificador.toHexString()
+            id: identificador.toHexString(),
+            nombre: datos.nombre,
+            email: datos.email
         };
     },
 
-    borrarUsuario: async ({ id }) => {
+    borrarUsuario: async ({ id }, context) => {
+        if (!context || !context.user) {
+            throw new Error("No autorizado. Debes iniciar sesión para realizar esta acción.");
+        }
+
         if (!ObjectId.isValid(id)) {
             throw new Error("El identificador del usuario no es válido.");
         }
@@ -189,12 +164,18 @@ export const resolvers = {
             throw new Error("No existe un usuario con ese identificador.");
         }
 
+        // Borrado en cascada
+        await db.collection("intercambios").deleteMany({ usuarioId: id });
+        await db.collection("selecciones").deleteMany({ usuarioId: id });
+
         return "Usuario eliminado correctamente";
     },
 
-    crearIntercambio: async ({
-        tipo, titulo, email, fecha, descripcion, usuarioId
-    }) => {
+    crearIntercambio: async ({ tipo, titulo, email, fecha, descripcion, usuarioId }, context) => {
+        if (!context || !context.user) {
+            throw new Error("No autorizado. Debes iniciar sesión para realizar esta acción.");
+        }
+
         const nuevoIntercambio = {
             tipo: tipo.trim(),
             titulo: titulo.trim(),
@@ -250,9 +231,11 @@ export const resolvers = {
         };
     },
 
-    actualizarIntercambio: async ({
-        id, tipo, titulo, email, fecha, descripcion, usuarioId
-    }) => {
+    actualizarIntercambio: async ({ id, tipo, titulo, email, fecha, descripcion, usuarioId }, context) => {
+        if (!context || !context.user) {
+            throw new Error("No autorizado. Debes iniciar sesión para realizar esta acción.");
+        }
+
         if (!ObjectId.isValid(id) || !ObjectId.isValid(usuarioId)) {
             throw new Error("El identificador del intercambio o del autor no es válido.");
         }
@@ -315,7 +298,11 @@ export const resolvers = {
         };
     },
 
-    borrarIntercambio: async ({ id }) => {
+    borrarIntercambio: async ({ id }, context) => {
+        if (!context || !context.user) {
+            throw new Error("No autorizado. Debes iniciar sesión para realizar esta acción.");
+        }
+
         if (!ObjectId.isValid(id)) {
             throw new Error("El identificador del intercambio no es válido.");
         }
@@ -329,6 +316,97 @@ export const resolvers = {
             throw new Error("No existe un intercambio con ese identificador.");
         }
 
+        // Borrado en cascada
+        await db.collection("selecciones").deleteMany({ intercambioId: id });
+
         return "Intercambio eliminado correctamente";
+    },
+
+    guardarSeleccion: async ({ usuarioId, intercambioId }, context) => {
+        if (!context || !context.user) {
+            throw new Error("No autorizado. Debes iniciar sesión para realizar esta acción.");
+        }
+
+        if (!ObjectId.isValid(usuarioId) || !ObjectId.isValid(intercambioId)) {
+            throw new Error("Los identificadores no son válidos.");
+        }
+
+        const db = getDB();
+
+        const usuario = await db.collection("usuarios").findOne({
+            _id: new ObjectId(usuarioId)
+        });
+
+        const intercambio = await db.collection("intercambios").findOne({
+            _id: new ObjectId(intercambioId)
+        });
+
+        if (!usuario || !intercambio) {
+            throw new Error("El usuario o el intercambio no existe.");
+        }
+
+        await db.collection("selecciones").updateOne(
+            { usuarioId, intercambioId },
+            { $set: { usuarioId, intercambioId } },
+            { upsert: true }
+        );
+
+        return true;
+    },
+
+    quitarDeSeleccion: async ({ usuarioId, intercambioId }, context) => {
+        if (!context || !context.user) {
+            throw new Error("No autorizado. Debes iniciar sesión para realizar esta acción.");
+        }
+
+        if (!ObjectId.isValid(usuarioId) || !ObjectId.isValid(intercambioId)) {
+            throw new Error("Los identificadores no son válidos.");
+        }
+
+        const db = getDB();
+
+        const resultado = await db.collection("selecciones").deleteOne({
+            usuarioId,
+            intercambioId
+        });
+
+        return resultado.deletedCount === 1;
+    },
+
+    // ==========================================
+    // QUERIES (Lectura)
+    // ==========================================
+
+    getUsuarios: async () => {
+        const db = getDB();
+        const usuarios = await db.collection("usuarios").find().toArray();
+
+        return usuarios.map(({ _id, ...datos }) => ({
+            ...datos,
+            id: _id.toHexString()
+        }));
+    },
+
+    getIntercambios: async () => {
+        const db = getDB();
+        const intercambios = await db.collection("intercambios").find().toArray();
+
+        return intercambios.map(({ _id, ...datos }) => ({
+            ...datos,
+            id: _id.toHexString()
+        }));
+    },
+
+    obtenerSeleccion: async ({ usuarioId }) => {
+        if (!ObjectId.isValid(usuarioId)) {
+            throw new Error("El identificador del usuario no es válido.");
+        }
+
+        const db = getDB();
+        const selecciones = await db.collection("selecciones").find({
+            usuarioId: usuarioId
+        }).toArray();
+
+        return selecciones.map((seleccion) => seleccion.intercambioId);
     }
 };
