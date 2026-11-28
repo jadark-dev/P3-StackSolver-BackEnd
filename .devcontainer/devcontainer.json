@@ -1,6 +1,9 @@
 {
 "name": "StackSolver P3 Backend",
 "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+"features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2":  { "moby": false }
+},
 "postCreateCommand": "npm ci",
 "forwardPorts": [4000],
 "portsAttributes": {
