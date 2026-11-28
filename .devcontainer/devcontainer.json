@@ -1,0 +1,17 @@
+{
+"name": "StackSolver P3 Backend",
+"image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+"postCreateCommand": "npm ci",
+"forwardPorts": [4000],
+"portsAttributes": {
+    "4000": {"label": "API GraphQL", "onAutoForward": "notify"}
+},
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "GraphQL.vscode-graphql-syntax",
+                "mongodb.mongodb-vscode"
+            ]
+        }
+    }
+}
